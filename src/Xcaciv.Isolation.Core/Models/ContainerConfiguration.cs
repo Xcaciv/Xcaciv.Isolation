@@ -44,4 +44,19 @@ public sealed record ContainerConfiguration
     /// Environment variables for the container
     /// </summary>
     public Dictionary<string, string>? EnvironmentVariables { get; init; }
+
+    /// <summary>
+    /// Network configuration
+    /// </summary>
+    public NetworkConfiguration? Network { get; init; }
+
+    /// <summary>
+    /// Container image to use
+    /// </summary>
+    public string? ImageName { get; init; }
+
+    /// <summary>
+    /// Enable log capture
+    /// </summary>
+    public bool EnableLogging { get; init; } = true;
 }

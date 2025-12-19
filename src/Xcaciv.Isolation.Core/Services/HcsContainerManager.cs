@@ -14,7 +14,25 @@ namespace Xcaciv.Isolation.Core.Services;
 public sealed class HcsContainerManager : IContainerManager, IDisposable
 {
     private readonly ConcurrentDictionary<string, HcsContainerInstance> containers = new();
+    private readonly ContainerLogger logger;
+    private readonly ContainerNetworking networking;
     private bool disposed;
+
+    public HcsContainerManager(ContainerLogger? logger = null, ContainerNetworking? networking = null)
+    {
+        this.logger = logger ?? new ContainerLogger();
+        this.networking = networking ?? new ContainerNetworking();
+    }
+
+    /// <summary>
+    /// Gets the container logger
+    /// </summary>
+    public IContainerLogger Logger => logger;
+
+    /// <summary>
+    /// Gets the container networking service
+    /// </summary>
+    public IContainerNetworking Networking => networking;
 
     public async Task<ContainerInfo> StartAsync(ContainerConfiguration configuration, CancellationToken cancellationToken = default)
     {
@@ -81,6 +99,25 @@ public sealed class HcsContainerManager : IContainerManager, IDisposable
                 HcsNativeMethods.HcsTerminateComputeSystem(computeSystem, IntPtr.Zero, null);
                 HcsNativeMethods.HcsCloseComputeSystem(computeSystem);
                 throw new ContainerException("Failed to register container");
+            }
+
+            // Configure networking if specified
+            if (configuration.Network is not null)
+            {
+                try
+                {
+                    await networking.ConfigureNetworkAsync(containerId, configuration.Network, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.AddLog(containerId, LogStream.StdErr, $"Network configuration warning: {ex.Message}");
+                }
+            }
+
+            // Log container start
+            if (configuration.EnableLogging)
+            {
+                logger.AddLog(containerId, LogStream.StdOut, $"Container '{configuration.Name}' started successfully");
             }
 
             return CreateContainerInfo(instance);
@@ -171,6 +208,10 @@ public sealed class HcsContainerManager : IContainerManager, IDisposable
         }
 
         HcsNativeMethods.HcsCloseComputeSystem(instance.ComputeSystem);
+
+        // Clean up logging and networking
+        logger.RemoveContainer(containerId);
+        networking.RemoveContainer(containerId);
 
         return Task.CompletedTask;
     }
@@ -314,6 +355,10 @@ public sealed class HcsContainerManager : IContainerManager, IDisposable
                         HcsNativeMethods.HcsTerminateComputeSystem(instance.ComputeSystem, IntPtr.Zero, null);
                     }
                     HcsNativeMethods.HcsCloseComputeSystem(instance.ComputeSystem);
+
+                    // Clean up logging and networking
+                    logger.RemoveContainer(instance.Id);
+                    networking.RemoveContainer(instance.Id);
                 }
                 catch
                 {
