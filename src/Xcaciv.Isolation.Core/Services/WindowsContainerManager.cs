@@ -12,6 +12,7 @@ namespace Xcaciv.Isolation.Core.Services;
 /// </summary>
 public sealed class WindowsContainerManager : IContainerManager, IDisposable
 {
+    private const int ContainerCleanupDelaySeconds = 5;
     private readonly ConcurrentDictionary<string, ContainerInstance> containers = new();
     private bool disposed;
 
@@ -240,14 +241,11 @@ public sealed class WindowsContainerManager : IContainerManager, IDisposable
             // Process monitoring failed, continue
         }
 
-        // Process has exited, clean up after a delay
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        // Process has exited, clean up after a delay to allow for final inspection
+        await Task.Delay(TimeSpan.FromSeconds(ContainerCleanupDelaySeconds));
         
-        if (containers.TryGetValue(containerId, out var instance))
-        {
-            // Container still exists, user hasn't removed it
-            // Keep it in the list for inspection
-        }
+        // Note: Container is kept in the list after process exit for user inspection
+        // User must explicitly call RemoveAsync to clean up
     }
 
     public void Dispose()

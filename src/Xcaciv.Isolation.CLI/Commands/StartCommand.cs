@@ -78,11 +78,11 @@ internal static class StartCommand
                     EnvironmentVariables = envVars
                 };
 
-                AnsiConsole.Status()
-                    .Start("Starting container...", ctx =>
+                await AnsiConsole.Status()
+                    .StartAsync("Starting container...", async ctx =>
                     {
                         ctx.Spinner(Spinner.Known.Dots);
-                        var result = containerManager.StartAsync(config).GetAwaiter().GetResult();
+                        var result = await containerManager.StartAsync(config);
                         
                         ctx.Status("Container started successfully!");
 
