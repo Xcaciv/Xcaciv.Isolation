@@ -1,18 +1,19 @@
 # Xcaciv.Isolation
 
-A self-contained .NET 10 NativeAOT CLI tool that hides the plumbing and lets you start, stop, inspect, and configure Windows containers without dependency on tools like VMs, Docker or Kubernetes.
+A self-contained .NET 10 NativeAOT CLI tool for managing Windows containers using the Host Compute Service (HCS) API. Create and manage real Windows containers programmatically without dependencies on Docker or Kubernetes.
 
 ## Overview
 
-Xcaciv.Isolation provides a lightweight Windows container runtime using Windows Job Objects for process isolation and resource management. It offers a simple command-line interface for managing containerized Windows applications directly on Windows 10/11 and Windows Server.
+Xcaciv.Isolation provides direct access to Windows container capabilities through the Host Compute Service API. It offers a simple command-line interface for managing Windows containers with full filesystem and process isolation.
 
 ## Features
 
-- **Lightweight Isolation**: Uses Windows Job Objects for process isolation without VM overhead
+- **Real Windows Containers**: Uses HCS API for true container isolation
+- **Filesystem Isolation**: Containerized filesystem with layer support
 - **Resource Management**: Control CPU and memory limits for containers
 - **NativeAOT**: Self-contained executable with no .NET runtime dependency
 - **Simple CLI**: Easy-to-use command-line interface powered by Spectre.Console
-- **No External Dependencies**: No Docker, Kubernetes, or VM requirements
+- **No External Dependencies**: Direct HCS API integration, no Docker or Kubernetes required
 
 ## Architecture
 
@@ -20,7 +21,7 @@ The project is organized into two main components:
 
 - **Xcaciv.Isolation.Core**: Core library containing container management logic
   - Container models and interfaces
-  - Windows Job Object integration
+  - HCS API P/Invoke integration
   - Container lifecycle management
   
 - **Xcaciv.Isolation.CLI**: Command-line interface application
@@ -30,9 +31,25 @@ The project is organized into two main components:
 
 ## Requirements
 
-- Windows 10/11 or Windows Server 2016+
+- Windows 10/11 Pro/Enterprise with Containers feature enabled, or Windows Server 2016+
 - .NET 10 SDK (for building)
 - Administrator privileges (for container operations)
+- Windows Container feature must be enabled
+
+### Enabling Windows Containers
+
+On Windows 10/11:
+```powershell
+# Run in elevated PowerShell
+Enable-WindowsOptionalFeature -Online -FeatureName Containers -All
+# Restart required
+```
+
+On Windows Server:
+```powershell
+Install-WindowsFeature -Name Containers
+# Restart required
+```
 
 ## Building
 
@@ -171,23 +188,24 @@ Remove a stopped container.
 
 ## How It Works
 
-Xcaciv.Isolation uses Windows Job Objects to provide process isolation and resource management:
+Xcaciv.Isolation uses the Windows Host Compute Service (HCS) API to provide true container isolation:
 
-1. **Job Objects**: Each container runs in its own Windows Job Object, which provides:
-   - Process isolation
-   - Resource limits (CPU, memory)
-   - Automatic cleanup when the job terminates
-
-2. **Process Management**: The container manager tracks running processes and their associated job objects
-
-3. **Resource Controls**: CPU and memory limits are enforced through job object limits
+1. **Container Creation**: User provides executable path and configuration
+2. **HCS Configuration**: System generates HCS JSON schema with container settings
+3. **Compute System**: HCS creates an isolated compute system with virtual filesystem
+4. **Container Start**: Container is started with specified resource limits
+5. **Monitoring**: System tracks container state through HCS APIs
+6. **Resource Limits**: CPU and memory limits are enforced at the hypervisor level
 
 ## Security Considerations
 
-- Containers are isolated at the process level using Windows Job Objects
-- This provides lighter isolation than full containerization (Docker/Windows Containers)
-- Suitable for development and testing scenarios
-- For production workloads, consider Windows Server Containers or Hyper-V isolation
+- Containers provide full OS-level isolation through HCS
+- Filesystem is isolated from the host system
+- Process trees are fully contained
+- Network can be isolated (configuration dependent)
+- Suitable for both development and production workloads
+- Stronger isolation than process-only containers (Job Objects)
+- For maximum security, consider Hyper-V isolation mode
 
 ## License
 

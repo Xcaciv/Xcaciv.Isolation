@@ -8,9 +8,9 @@ internal class Program
 {
     private static async Task<int> Main(string[] args)
     {
-        using var containerManager = new WindowsContainerManager();
+        using var containerManager = new HcsContainerManager();
 
-        var rootCommand = new RootCommand("Windows Container Manager - Manage Windows containers without Docker or Kubernetes")
+        var rootCommand = new RootCommand("Windows Container Manager - Manage Windows containers using HCS API")
         {
             StartCommand.Create(containerManager),
             StopCommand.Create(containerManager),
@@ -22,3 +22,4 @@ internal class Program
         return await rootCommand.InvokeAsync(args);
     }
 }
+
