@@ -123,7 +123,48 @@ Stop a running container:
 Xcaciv.Isolation.CLI.exe stop <container-id>
 ```
 
-### Remove a Container
+### Logging
+
+View container logs:
+```powershell
+.\Xcaciv.Isolation.CLI.exe logs <container-id>
+```
+
+or using the alias:
+
+```powershell
+.\Xcaciv.Isolation.CLI.exe logs <container-id> --follow
+```
+
+**Logging Options:**
+- `--follow, -f`: Follow log output (live streaming)
+- `--tail <n>`: Show last N lines
+
+### Image Management
+
+Import an image from local directories:
+
+```powershell
+.\Xcaciv.Isolation.CLI.exe image import --name myapp --tag v1.0 --base C:\Images\Base --layer C:\Images\Layer1
+```
+
+List all images:
+
+```powershell
+.\Xcaciv.Isolation.CLI.exe image list
+```
+
+Inspect an image:
+
+```powershell
+.\Xcaciv.Isolation.CLI.exe image inspect myapp:v1.0
+```
+
+Remove an image:
+
+```powershell
+.\Xcaciv.Isolation.CLI.exe image remove myapp:v1.0
+```
 
 Remove a stopped container:
 
@@ -185,6 +226,45 @@ Remove a stopped container.
 
 **Options:**
 - `--force, -f`: Force remove a running container
+
+### logs
+
+View container logs.
+
+**Arguments:**
+- `container-id`: ID of the container
+
+**Options:**
+- `--follow, -f`: Follow log output (streaming)
+- `--tail <n>`: Number of lines to show from the end
+
+### image list (ls)
+
+List all container images.
+
+### image import
+
+Import a container image from local directories.
+
+**Options:**
+- `--name` (required): Name for the image
+- `--tag`: Tag for the image (default: latest)
+- `--base` (required): Path to the base image directory
+- `--layer`: Layer directory paths (can be specified multiple times)
+
+### image inspect
+
+Display detailed information about an image.
+
+**Arguments:**
+- `image`: Image name with optional tag (name:tag)
+
+### image remove (rm)
+
+Remove a container image.
+
+**Arguments:**
+- `image`: Image name with optional tag (name:tag)
 
 ## How It Works
 
